@@ -24,16 +24,16 @@ SYSTEMD_SERVICE:${PN} = "fpgacfg.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 do_install() {
-    install -d ${D}${sbindir} ${D}${systemd_system_unitdir} ${D}${docdir}/${BPN}
+    install -d ${D}${sbindir} ${D}${systemd_system_unitdir} ${D}${datadir}/${BPN}
     install -m 0755 ${WORKDIR}/fpgacfg.sh ${D}${sbindir}/fpgacfg.sh
     install -m 0644 ${WORKDIR}/fpgacfg.service ${D}${systemd_system_unitdir}/fpgacfg.service
-    install -m 0644 ${WORKDIR}/active.conf.example ${D}${docdir}/${BPN}/active.conf.example
+    install -m 0644 ${WORKDIR}/active.conf.example ${D}${datadir}/${BPN}/active.conf.example
     sed -i s,@SBINDIR@,${sbindir},g ${D}${systemd_system_unitdir}/fpgacfg.service
 }
 
 FILES:${PN} = "${sbindir}/fpgacfg.sh \
                ${systemd_system_unitdir}/fpgacfg.service \
-               ${docdir}/${BPN} \
+               ${datadir}/${BPN} \
 "
 
 RDEPENDS:${PN} = "fpga-manager-script"

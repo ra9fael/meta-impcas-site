@@ -20,14 +20,14 @@ SYSTEMD_SERVICE:${PN} = "bootcfg.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 do_install() {
-    install -d ${D}${sbindir} ${D}${systemd_system_unitdir} ${D}${docdir}/${BPN}
+    install -d ${D}${sbindir} ${D}${systemd_system_unitdir} ${D}${datadir}/${BPN}
     install -m 0755 ${WORKDIR}/bootcfg.sh ${D}${sbindir}/bootcfg.sh
     install -m 0644 ${WORKDIR}/bootcfg.service ${D}${systemd_system_unitdir}/bootcfg.service
-    install -m 0644 ${WORKDIR}/net.cfg.example ${D}${docdir}/${BPN}/net.cfg.example
+    install -m 0644 ${WORKDIR}/net.cfg.example ${D}${datadir}/${BPN}/net.cfg.example
     sed -i s,@SBINDIR@,${sbindir},g ${D}${systemd_system_unitdir}/bootcfg.service
 }
 
 FILES:${PN} = "${sbindir}/bootcfg.sh \
                ${systemd_system_unitdir}/bootcfg.service \
-               ${docdir}/${BPN} \
+               ${datadir}/${BPN} \
 "
