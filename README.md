@@ -1,6 +1,6 @@
-# meta-impcas-util
+# meta-impcas-site
 
-Hardware-agnostic systemd services and tools shared across IMPCAS
+Site-configuration systemd services and tools shared across IMPCAS
 PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
 
 * `bootmount` -- mount the BOOT partition (label `BOOT`) at `/boot`
