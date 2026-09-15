@@ -1,0 +1,11 @@
+# meta-impcas-util
+
+Hardware-agnostic systemd services and tools shared across IMPCAS
+PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
+
+* `bootmount` -- mount the BOOT partition (label `BOOT`) at `/boot`
+* `bootcfg` -- network and NTP configuration from `/boot/net.cfg`
+* `fpgacfg` -- load FPGA bitstreams from `/boot/fpga/` via `fpgautil`
+
+Board-specific recipes live in each project's `meta-user`; EPICS recipes live
+in `meta-epics`.
