@@ -8,4 +8,4 @@ PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
 * `fpgacfg` -- load FPGA bitstreams from `/boot/fpga/` via `fpgautil`
 
 Board-specific recipes live in each project's `meta-user`; EPICS recipes live
-in `meta-epics`.
+in `meta-impcas-epics`.
