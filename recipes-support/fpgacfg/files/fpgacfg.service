@@ -1,0 +1,15 @@
+[Unit]
+Description=Load FPGA bitstreams from /boot/fpga
+# Runs after the BOOT partition is mounted and before anything that talks to
+# the PL (IOC services order after this one through a drop-in).
+After=local-fs.target bootmount.service
+Before=multi-user.target
+ConditionPathExists=/boot/fpga
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@SBINDIR@/fpgacfg.sh
+
+[Install]
+WantedBy=multi-user.target
