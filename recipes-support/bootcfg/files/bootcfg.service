@@ -1,0 +1,16 @@
+[Unit]
+Description=Apply network and NTP configuration from /boot/net.cfg
+# Site-specific network configuration lives on the writable BOOT partition;
+# this service translates it into runtime configuration for
+# systemd-networkd and systemd-timesyncd before they start.
+After=local-fs.target bootmount.service
+Before=systemd-networkd.service systemd-timesyncd.service
+ConditionPathExists=/boot/net.cfg
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@SBINDIR@/bootcfg.sh
+
+[Install]
+WantedBy=multi-user.target
