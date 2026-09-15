@@ -31,5 +31,3 @@ FILES:${PN} = "${sbindir}/bootcfg.sh \
                ${systemd_system_unitdir}/bootcfg.service \
                ${docdir}/${BPN} \
 "
-
-RDEPENDS:${PN} = "systemd-networkd"
