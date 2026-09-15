@@ -3,33 +3,85 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Load FPGA bitstreams from the BOOT partition at boot. Every *.bit.bin
-# (and, as a fallback, *.bit) file under /boot/fpga is configured through
-# Xilinx fpgautil in lexical order -- normally there is exactly one.
+# Configure the PL from the BOOT partition. /boot/fpga is a pool: any number
+# of *.bit.bin (or *.bit) files, exactly one of which is selected by the
+# KEY=value file /boot/fpga/active.conf:
 #
-# Without a /boot/fpga directory the service exits successfully: a
-# deployment that configures the PL from BOOT.BIN through the FSBL needs no
-# runtime loading and this service is a no-op.
+#     BITSTREAM=blm_prod.bit.bin
+#
+# Without arguments (the systemd service) the selected bitstream is loaded
+# through Xilinx fpgautil. With a file-name argument the given pool file is
+# loaded immediately, for switching at runtime without a reboot -- note that
+# whatever application mapped the PL keeps stale register mappings and has to
+# be restarted afterwards.
+#
+# A deployment that configures the PL from BOOT.BIN through the FSBL needs no
+# runtime loading: with no /boot/fpga directory (or an empty pool) this
+# script is a no-op. An ambiguous pool -- files present but no active.conf,
+# or a selection that does not exist -- is an error listing the candidates:
+# loading a wrong bitstream silently would be far worse than failing to
+# configure the PL at all.
 
 set -e
 
 FPGA_DIR=/boot/fpga
-files=""
+ACTIVE="$FPGA_DIR/active.conf"
 
-if [ -d "$FPGA_DIR" ]; then
+pool_files() {
     for f in "$FPGA_DIR"/*.bit.bin "$FPGA_DIR"/*.bit; do
-        [ -f "$f" ] && files="$files $f"
+        [ -f "$f" ] && echo "$f"
     done
-fi
+}
 
-if [ -z "$files" ]; then
-    echo "fpgacfg: no bitstream under $FPGA_DIR, nothing to load"
+load() {
+    echo "fpgacfg: loading $1"
+    fpgautil -b "$1"
+}
+
+if [ -n "$1" ]; then
+    # Manual mode: exactly one plain file name inside the pool.
+    case "$1" in
+        */*|.*|"")
+            echo "fpgacfg: '$1' is not a plain file name under $FPGA_DIR" >&2
+            exit 1
+            ;;
+    esac
+    [ -f "$FPGA_DIR/$1" ] || {
+        echo "fpgacfg: no such bitstream: $FPGA_DIR/$1" >&2
+        exit 1
+    }
+    load "$FPGA_DIR/$1"
+    echo "fpgacfg: done -- restart any application that mapped the PL."
     exit 0
 fi
 
-for f in $files; do
-    echo "fpgacfg: loading $f"
-    fpgautil -b "$f"
-done
+# Boot mode.
+if [ ! -d "$FPGA_DIR" ] || [ -z "$(pool_files)" ]; then
+    echo "fpgacfg: no bitstream pool under $FPGA_DIR, nothing to load"
+    exit 0
+fi
 
-echo "fpgacfg: all bitstreams loaded"
+if [ ! -r "$ACTIVE" ]; then
+    echo "fpgacfg: bitstreams present but $ACTIVE is missing, refusing to guess" >&2
+    echo "fpgacfg: available bitstreams:" >&2
+    pool_files | sed 's|^|fpgacfg:   |' >&2
+    exit 1
+fi
+
+# The file is sourced, so only the one known KEY with a safe value charset
+# is accepted.
+if grep -Evq '^[[:space:]]*(#|$)|^BITSTREAM="?[A-Za-z0-9._-]+"?[[:space:]]*$' "$ACTIVE"; then
+    echo "fpgacfg: $ACTIVE contains unsupported lines, ignoring it" >&2
+    exit 1
+fi
+
+. "$ACTIVE"
+
+if [ -z "$BITSTREAM" ] || [ ! -f "$FPGA_DIR/$BITSTREAM" ]; then
+    echo "fpgacfg: BITSTREAM='$BITSTREAM' not found in $FPGA_DIR" >&2
+    echo "fpgacfg: available bitstreams:" >&2
+    pool_files | sed 's|^|fpgacfg:   |' >&2
+    exit 1
+fi
+
+load "$FPGA_DIR/$BITSTREAM"

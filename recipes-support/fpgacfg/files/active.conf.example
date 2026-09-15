@@ -1,0 +1,4 @@
+# Select the bitstream to load at boot. Copy to /boot/fpga/active.conf and
+# edit per machine; the value must be a plain file name inside /boot/fpga.
+
+BITSTREAM=blm_prod.bit.bin
