@@ -1,0 +1,15 @@
+[Unit]
+Description=Mount the BOOT partition (label BOOT) at /boot
+# Runs before everything that reads site configuration from /boot, and before
+# local-fs.target completes so ordering against ordinary services works.
+DefaultDependencies=no
+After=systemd-udevd.service
+Before=local-fs.target bootcfg.service fpgacfg.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@SBINDIR@/bootmount.sh
+
+[Install]
+WantedBy=local-fs.target
