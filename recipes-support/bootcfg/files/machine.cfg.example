@@ -1,5 +1,5 @@
 # bootcfg: site network configuration, read at boot from the BOOT partition.
-# Copy to /boot/net.cfg on the SD card and edit per machine. KEY=value only;
+# Copy to /boot/machine.cfg on the SD card and edit per machine. KEY=value only;
 # values with spaces must be quoted.
 
 INTERFACE=eth0

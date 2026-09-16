@@ -1,4 +1,4 @@
-SUMMARY = "Network and NTP configuration from /boot/net.cfg"
+SUMMARY = "Machine identity, network and NTP configuration from /boot/machine.cfg"
 DESCRIPTION = "Translates a per-machine KEY=value file on the writable BOOT \
 partition into runtime systemd-networkd and systemd-timesyncd configuration \
 under /run, so a read-only rootfs image stays identical across machines."
@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 SRC_URI = "file://bootcfg.sh \
            file://bootcfg.service \
-           file://net.cfg.example \
+           file://machine.cfg.example \
 "
 
 S = "${WORKDIR}"
@@ -23,7 +23,7 @@ do_install() {
     install -d ${D}${sbindir} ${D}${systemd_system_unitdir} ${D}${datadir}/${BPN}
     install -m 0755 ${WORKDIR}/bootcfg.sh ${D}${sbindir}/bootcfg.sh
     install -m 0644 ${WORKDIR}/bootcfg.service ${D}${systemd_system_unitdir}/bootcfg.service
-    install -m 0644 ${WORKDIR}/net.cfg.example ${D}${datadir}/${BPN}/net.cfg.example
+    install -m 0644 ${WORKDIR}/machine.cfg.example ${D}${datadir}/${BPN}/machine.cfg.example
     sed -i s,@SBINDIR@,${sbindir},g ${D}${systemd_system_unitdir}/bootcfg.service
 }
 
