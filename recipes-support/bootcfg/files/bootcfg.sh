@@ -18,6 +18,7 @@
 #   GATEWAY     default gateway
 #   DNS         space-separated DNS servers
 #   NTP         space-separated NTP servers
+#   HOSTNAME    machine host name (written to /etc/hostname and applied)
 #
 # With no /boot/net.cfg the service exits and the built-in networkd
 # configuration applies unchanged.
@@ -28,6 +29,7 @@ CFG=/boot/net.cfg
 NETWORK_DIR=/run/systemd/network
 TIMESYNC_CONF=/run/systemd/timesyncd.conf.d/bootcfg.conf
 NETWORK_FILE=$NETWORK_DIR/80-bootcfg.network
+HOSTNAME_FILE=/etc/hostname
 
 [ -r "$CFG" ] || { echo "bootcfg: no $CFG, keeping built-in network config"; exit 0; }
 
@@ -88,4 +90,11 @@ if [ -n "$NTP" ]; then
     } > "$TIMESYNC_CONF"
 fi
 
-echo "bootcfg: wrote $NETWORK_FILE${NTP:+ and $TIMESYNC_CONF} from $CFG"
+if [ -n "$HOSTNAME" ]; then
+    # The rootfs is mounted rw at runtime, so /etc/hostname is writable and
+    # the name survives reboots without the bootcfg service.
+    echo "$HOSTNAME" > "$HOSTNAME_FILE"
+    hostname "$HOSTNAME"
+fi
+
+echo "bootcfg: wrote $NETWORK_FILE${NTP:+ and $TIMESYNC_CONF}${HOSTNAME:+, hostname $HOSTNAME} from $CFG"

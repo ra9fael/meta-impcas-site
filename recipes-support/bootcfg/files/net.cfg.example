@@ -3,6 +3,7 @@
 # values with spaces must be quoted.
 
 INTERFACE=eth0
+HOSTNAME=blm01
 MACADDRESS=00:0a:35:00:00:01
 IPADDRESS=192.168.138.101
 NETMASK=255.255.255.0
