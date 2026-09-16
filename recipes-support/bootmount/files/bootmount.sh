@@ -9,7 +9,16 @@
 #
 # The rootfs ships its own /boot directory with copies of the boot files;
 # once this mount succeeds those copies are shadowed, which is harmless --
-# U-Boot reads the partition directly, not through the rootfs.
+# U-Boot reads the partition directly, not through the rootfs (the image
+# build deletes them anyway).
+#
+# vfat has no permission bits of its own: everything would show up owned by
+# root and read-only for everyone else. umask=000 makes the whole partition
+# writable by any local user, which is the point of the site-config scheme --
+# the operator edits machine.cfg, envPaths and bitstreams without sudo. On an
+# appliance whose IOC already runs as root this grants nothing new, and
+# anyone with the SD card in a PC has full access regardless. noatime keeps
+# read access from dirtying the FAT.
 
 set -e
 
@@ -20,9 +29,9 @@ if mountpoint -q /boot; then
     exit 0
 fi
 
-if ! mount LABEL=BOOT /boot; then
+if ! mount -o umask=000,noatime LABEL=BOOT /boot; then
     echo "bootmount: no filesystem labelled BOOT found" >&2
     exit 1
 fi
 
-echo "bootmount: mounted $(findmnt -n -o SOURCE /boot) at /boot"
+echo "bootmount: mounted $(findmnt -n -o SOURCE /boot) at /boot (world-writable)"
