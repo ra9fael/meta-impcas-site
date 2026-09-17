@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: MIT
 
 # Configure the PL from the BOOT partition. /boot/fpga is a pool: any number
-# of *.bit.bin (or *.bit) files, exactly one of which is selected by the
-# KEY=value file /boot/fpga/active.conf:
+# of *.bin files (including *.bit.bin), or raw *.bit files, exactly one of
+# which is selected by the KEY=value file /boot/fpga/active.conf:
 #
 #     BITSTREAM=blm_prod.bit.bin
 #
@@ -28,7 +28,7 @@ FPGA_DIR=/boot/fpga
 ACTIVE="$FPGA_DIR/active.conf"
 
 pool_files() {
-    for f in "$FPGA_DIR"/*.bit.bin "$FPGA_DIR"/*.bit; do
+    for f in "$FPGA_DIR"/*.bin "$FPGA_DIR"/*.bit; do
         [ -f "$f" ] && echo "$f"
     done
 }
