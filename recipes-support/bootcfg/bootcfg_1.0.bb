@@ -1,7 +1,9 @@
 SUMMARY = "Machine identity, network and NTP configuration from /boot/machine.cfg"
 DESCRIPTION = "Translates a per-machine KEY=value file on the writable BOOT \
 partition into runtime systemd-networkd and systemd-timesyncd configuration \
-under /run, so a read-only rootfs image stays identical across machines."
+under /run, so a read-only rootfs image stays identical across machines. \
+Time servers are applied to the highest-priority daemon present (chronyd > \
+ntpd > systemd-timesyncd); the others are configured too but disabled."
 HOMEPAGE = "https://github.com/ra9fael/meta-impcas-util"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"

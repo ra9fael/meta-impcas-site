@@ -1,10 +1,12 @@
 [Unit]
 Description=Apply network and NTP configuration from /boot/machine.cfg
 # Site-specific network configuration lives on the writable BOOT partition;
-# this service translates it into runtime configuration for
-# systemd-networkd and systemd-timesyncd before they start.
+# this service translates it into runtime configuration before the network
+# and time daemons start. Ordering against daemons the image does not ship
+# (ntpd, chronyd) is a no-op: systemd only builds ordering edges for units
+# that actually exist.
 After=local-fs.target bootmount.service
-Before=systemd-networkd.service systemd-timesyncd.service
+Before=systemd-networkd.service systemd-timesyncd.service ntpd.service chronyd.service
 ConditionPathExists=/boot/machine.cfg
 
 [Service]
