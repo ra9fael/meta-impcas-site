@@ -15,7 +15,7 @@ SRC_URI = "file://bootcfg.sh \
 
 S = "${WORKDIR}"
 
-inherit systemd
+inherit systemd deploy
 
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "bootcfg.service"
@@ -33,3 +33,16 @@ FILES:${PN} = "${sbindir}/bootcfg.sh \
                ${systemd_system_unitdir}/bootcfg.service \
                ${datadir}/${BPN} \
 "
+
+# The .example template is staged into DEPLOY_DIR_IMAGE and copied into the
+# project's images/linux by PetaLinux's plnx-deploy machinery (plnx_deploy
+# postfunc, same as u-boot/device-tree), so inflate-sd.sh can put it on the
+# BOOT partition. Rename and edit it per machine (machine.cfg) before first
+# boot.
+do_deploy() {
+    install -m 0644 ${WORKDIR}/machine.cfg.example ${DEPLOYDIR}/machine.cfg.example
+}
+addtask deploy after do_install before do_build
+do_deploy[postfuncs] += "plnx_deploy"
+do_deploy_setscene[postfuncs] += "plnx_deploy"
+PACKAGES_LIST[bootcfg] = "machine.cfg.example:machine.cfg.example"

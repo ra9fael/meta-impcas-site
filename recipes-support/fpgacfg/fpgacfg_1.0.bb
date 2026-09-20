@@ -17,7 +17,7 @@ SRC_URI = "file://fpgacfg.sh \
 
 S = "${WORKDIR}"
 
-inherit systemd
+inherit systemd deploy
 
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = "fpgacfg.service"
@@ -37,3 +37,18 @@ FILES:${PN} = "${sbindir}/fpgacfg.sh \
 "
 
 RDEPENDS:${PN} = "fpga-manager-script"
+
+# Staged into DEPLOY_DIR_IMAGE and copied into the project's images/linux
+# by PetaLinux's plnx-deploy machinery (plnx_deploy postfunc, same as
+# u-boot/device-tree), mirroring the target layout (BOOT partition):
+# fpga/active.conf.example is renamed and edited per machine; the bitstream
+# pool (*.bin) itself is per-machine content that cannot come from the
+# build.
+do_deploy() {
+    install -d ${DEPLOYDIR}/fpga
+    install -m 0644 ${WORKDIR}/active.conf.example ${DEPLOYDIR}/fpga/active.conf.example
+}
+addtask deploy after do_install before do_build
+do_deploy[postfuncs] += "plnx_deploy"
+do_deploy_setscene[postfuncs] += "plnx_deploy"
+PACKAGES_LIST[fpgacfg] = "fpga:fpga"
