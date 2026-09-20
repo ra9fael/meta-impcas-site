@@ -1,6 +1,11 @@
-# bootcfg: site network configuration, read at boot from the BOOT partition.
-# Copy to /boot/machine.cfg on the SD card and edit per machine. KEY=value only;
-# values with spaces must be quoted.
+# bootcfg: site network configuration. Deployed to /boot/machine.cfg by
+# inflate-sd.sh -- edit it right there per machine. KEY=value only; values
+# with spaces must be quoted.
+#
+# Addressing is static by default: one or more addresses in IPADDRESS,
+# space-separated, each optionally suffixed with /prefix (an address without
+# /prefix falls back to PREFIXLEN, then NETMASK). DHCP is off unless DHCP=yes
+# is set; DHCP=yes ignores the static address keys.
 
 INTERFACE=eth0
 HOSTNAME=blm01
@@ -10,6 +15,9 @@ NETMASK=255.255.255.0
 # PREFIXLEN=24              # takes precedence over NETMASK
 GATEWAY=192.168.138.1
 DNS="192.168.138.254"
+# DHCP=yes                  # DHCP instead of the static address keys
+# Two static addresses on one interface:
+# IPADDRESS="192.168.138.101/24 10.0.0.5/8"
 # Servers go to the best time daemon installed, chronyd > ntpd >
 # systemd-timesyncd; the other installed ones are configured too but disabled.
 NTP="192.168.138.1"

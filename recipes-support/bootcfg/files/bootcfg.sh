@@ -12,13 +12,23 @@
 # Keys:
 #   INTERFACE   interface name to match (default eth0)
 #   MACADDRESS  hardware address to set on the interface
-#   IPADDRESS   static IPv4 address
-#   NETMASK     dotted netmask (or use PREFIXLEN directly)
-#   PREFIXLEN   prefix length, takes precedence over NETMASK
+#   DHCP        yes -> DHCP=ipv4; the static address keys are then ignored
+#               (unset or anything else -> static addressing)
+#   IPADDRESS   space-separated static IPv4 address(es), each optionally
+#               suffixed with /prefix
+#   NETMASK     dotted netmask, fallback prefix for addresses without /prefix
+#   PREFIXLEN   prefix length fallback, takes precedence over NETMASK
 #   GATEWAY     default gateway
 #   DNS         space-separated DNS servers
 #   NTP         space-separated NTP servers
 #   HOSTNAME    machine host name (written to /etc/hostname and applied)
+#
+# The generated 80-bootcfg.network sorts before the built-in 80-wired.network
+# and networkd applies only the first matching file, so the file is written
+# only when it actually configures addressing (DHCP=yes or at least one
+# IPADDRESS); with DNS/NTP-only or empty address configuration it stays
+# unwritten and the built-in configuration applies unchanged. MACADDRESS is
+# likewise applied only when the file is written.
 #
 # Time sync daemon selection, highest priority first: chronyd > ntpd >
 # systemd-timesyncd. The base image ships only systemd-timesyncd; if another
@@ -51,6 +61,11 @@ if grep -Evq '^[[:space:]]*(#|$)|^[A-Za-z_][A-Za-z0-9_]*="?[A-Za-z0-9_.:/ -]*"?[
     exit 1
 fi
 
+# The config file is the only source of these keys: unset any inherited
+# environment values first (a HOSTNAME leaked from the service environment
+# would otherwise end up in the generated configuration).
+unset INTERFACE MACADDRESS DHCP IPADDRESS NETMASK PREFIXLEN GATEWAY DNS NTP HOSTNAME
+
 . "$CFG"
 
 INTERFACE=${INTERFACE:-eth0}
@@ -71,31 +86,67 @@ if [ -z "$PREFIXLEN" ] && [ -n "$NETMASK" ]; then
     PREFIXLEN=$(mask_to_prefix "$NETMASK")
 fi
 
-mkdir -p "$NETWORK_DIR"
+if [ "$DHCP" = yes ] && [ -n "$IPADDRESS$NETMASK$PREFIXLEN$GATEWAY" ]; then
+    echo "bootcfg: DHCP=yes -- ignoring static address keys" >&2
+fi
 
-{
-    echo "[Match]"
-    echo "Name=$INTERFACE"
-    echo ""
-    echo "[Link]"
-    [ -n "$MACADDRESS" ] && echo "MACAddress=$MACADDRESS"
-    echo ""
-    echo "[Network]"
-    if [ -n "$IPADDRESS" ]; then
-        if [ -n "$PREFIXLEN" ]; then
-            echo "Address=$IPADDRESS/$PREFIXLEN"
-        else
-            echo "Address=$IPADDRESS"
-        fi
-    fi
-    [ -n "$GATEWAY" ] && echo "Gateway=$GATEWAY"
-    for server in $DNS; do
-        echo "DNS=$server"
-    done
-    for server in $NTP; do
-        echo "NTP=$server"
-    done
-} > "$NETWORK_FILE"
+# Write the .network file only when it configures addressing: it sorts before
+# the built-in 80-wired.network and networkd applies only the first matching
+# file, so an addressing-less file here would shadow the built-in
+# configuration and take a DHCP-configured interface down. Any file left by
+# an earlier run of this service is removed first (same for the timesyncd
+# drop-in, so a removed NTP= key takes effect without a reboot).
+rm -f "$NETWORK_FILE" "$TIMESYNC_CONF"
+
+if [ "$DHCP" = yes ]; then
+    mkdir -p "$NETWORK_DIR"
+    {
+        echo "[Match]"
+        echo "Name=$INTERFACE"
+        echo ""
+        echo "[Link]"
+        [ -n "$MACADDRESS" ] && echo "MACAddress=$MACADDRESS"
+        echo ""
+        echo "[Network]"
+        echo "DHCP=ipv4"
+        for server in $DNS; do
+            echo "DNS=$server"
+        done
+        for server in $NTP; do
+            echo "NTP=$server"
+        done
+    } > "$NETWORK_FILE"
+elif [ -n "$IPADDRESS" ]; then
+    mkdir -p "$NETWORK_DIR"
+    {
+        echo "[Match]"
+        echo "Name=$INTERFACE"
+        echo ""
+        echo "[Link]"
+        [ -n "$MACADDRESS" ] && echo "MACAddress=$MACADDRESS"
+        echo ""
+        echo "[Network]"
+        for address in $IPADDRESS; do
+            case $address in
+                */*) echo "Address=$address" ;;
+                *)
+                    if [ -n "$PREFIXLEN" ]; then
+                        echo "Address=$address/$PREFIXLEN"
+                    else
+                        echo "Address=$address"
+                    fi
+                    ;;
+            esac
+        done
+        [ -n "$GATEWAY" ] && echo "Gateway=$GATEWAY"
+        for server in $DNS; do
+            echo "DNS=$server"
+        done
+        for server in $NTP; do
+            echo "NTP=$server"
+        done
+    } > "$NETWORK_FILE"
+fi
 
 # A daemon counts as installed if its unit file exists anywhere on the unit
 # search path, regardless of enablement: arbitration must also work for a
@@ -199,7 +250,11 @@ if [ -n "$HOSTNAME" ]; then
     hostname "$HOSTNAME"
 fi
 
-MSG="bootcfg: wrote $NETWORK_FILE"
+if [ -f "$NETWORK_FILE" ]; then
+    MSG="bootcfg: wrote $NETWORK_FILE"
+else
+    MSG="bootcfg: no addressing configured, keeping built-in network config"
+fi
 [ -n "$TIME_CFG" ] && MSG="$MSG and $TIME_CFG for $ACTIVE"
 [ -n "$HOSTNAME" ] && MSG="$MSG, hostname $HOSTNAME"
 echo "$MSG from $CFG"
