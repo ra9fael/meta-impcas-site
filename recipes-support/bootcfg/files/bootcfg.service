@@ -5,8 +5,16 @@ Description=Apply network and NTP configuration from /boot/machine.cfg
 # and time daemons start. Ordering against daemons the image does not ship
 # (ntpd, chronyd) is a no-op: systemd only builds ordering edges for units
 # that actually exist.
+#
+# systemd-timesyncd deliberately has NO ordering edge: it is wanted by
+# sysinit.target while this service is wanted by multi-user.target, so a
+# Before= edge here closes the ordering cycle
+# multi-user -> bootcfg -> timesyncd -> sysinit -> basic -> multi-user
+# and systemd deletes the timesyncd start job to break it (the daemon
+# then never starts at boot). bootcfg.sh instead restarts the active
+# daemon after writing its configuration.
 After=local-fs.target bootmount.service
-Before=systemd-networkd.service systemd-timesyncd.service ntpd.service chronyd.service
+Before=systemd-networkd.service ntpd.service chronyd.service
 ConditionPathExists=/boot/machine.cfg
 
 [Service]

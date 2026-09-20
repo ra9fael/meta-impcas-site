@@ -171,10 +171,13 @@ if [ -n "$ACTIVE" ] && [ -n "$NTP" ]; then
         # can be switched on later without touching machine.cfg.
         systemctl disable --now "$unit" 2>/dev/null || true
     done
-    # bootcfg is ordered Before= the daemons, so normally this boot has not
-    # started the active one yet and the plain enablement applies; restart in
-    # case it is somehow already running with a stale configuration.
-    systemctl try-restart "$ACTIVE" 2>/dev/null || true
+    # bootcfg is not ordered against the time daemons (systemd-timesyncd is a
+    # sysinit-phase unit and a Before= edge from this multi-user service would
+    # close an ordering cycle -- see bootcfg.service), so the active daemon may
+    # already be running with a stale configuration -- or may have exited at
+    # sysinit for lack of servers. restart (unlike try-restart) also starts a
+    # dead unit, so the freshly written configuration always applies.
+    systemctl restart "$ACTIVE" 2>/dev/null || true
 elif [ -n "$ACTIVE" ]; then
     # No NTP key: still enforce one-daemon-only, but write no configuration.
     for unit in $TIME_UNITS; do
