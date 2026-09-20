@@ -111,6 +111,11 @@ write_timesyncd_conf() {
     {
         echo "[Time]"
         echo "NTP=$NTP"
+        # Windows w32time sources report root dispersion in the seconds
+        # range (it grows over their long poll interval), which trips the
+        # 5s default and makes timesyncd reject a server that is actually
+        # stratum-3 synced. Site LAN sources, so allow more slack.
+        echo "RootDistanceMaxSec=15"
     } > "$TIMESYNC_CONF"
 }
 

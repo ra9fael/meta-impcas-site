@@ -1,0 +1,8 @@
+[Unit]
+Description=Save the current clock to /boot (timer-driven)
+# Triggered by clocksave.timer. Deliberately has no [Install] section: it
+# must not be statically enabled, only timer-activated.
+
+[Service]
+Type=oneshot
+ExecStart=@SBINDIR@/clocksave.sh save

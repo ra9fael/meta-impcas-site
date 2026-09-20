@@ -1,0 +1,15 @@
+[Unit]
+Description=Save the current clock to /boot at start and shutdown
+# ExecStart persists once the clock is worth saving; ExecStop runs inside
+# the shutdown transaction, capturing the final time before power-off or
+# reboot. clocksave.timer triggers clocksave-periodic.service for the
+# periodic updates in between.
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=@SBINDIR@/clocksave.sh save
+ExecStop=@SBINDIR@/clocksave.sh save
+
+[Install]
+WantedBy=multi-user.target

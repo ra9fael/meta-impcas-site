@@ -1,0 +1,10 @@
+[Unit]
+Description=Save the current clock to /boot periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Unit=clocksave-periodic.service
+
+[Install]
+WantedBy=timers.target

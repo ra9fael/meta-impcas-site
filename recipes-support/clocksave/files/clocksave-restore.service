@@ -1,0 +1,19 @@
+[Unit]
+Description=Restore last known clock from /boot/clock.save
+# Boards without an RTC boot into the kernel's default time; the restored
+# value is at most one save interval stale and is superseded by NTP as soon
+# as it syncs. Running in the sysinit phase puts the restore before nearly
+# everything else on the boot path; bootmount provides /boot in the local-fs
+# phase, which completes before sysinit.
+DefaultDependencies=no
+After=bootmount.service
+Before=sysinit.target shutdown.target
+Conflicts=shutdown.target
+ConditionPathExists=/boot/clock.save
+
+[Service]
+Type=oneshot
+ExecStart=@SBINDIR@/clocksave.sh restore
+
+[Install]
+WantedBy=sysinit.target
