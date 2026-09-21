@@ -1,5 +1,5 @@
 [Unit]
-Description=Apply network and NTP configuration from /boot/machine.cfg
+Description=Apply network and NTP configuration from /boot/machine/machine.cfg
 # Site-specific network configuration lives on the writable BOOT partition;
 # this service translates it into runtime configuration before the network
 # and time daemons start. Ordering against daemons the image does not ship
@@ -15,7 +15,7 @@ Description=Apply network and NTP configuration from /boot/machine.cfg
 # daemon after writing its configuration.
 After=local-fs.target bootmount.service
 Before=systemd-networkd.service ntpd.service chronyd.service
-ConditionPathExists=/boot/machine.cfg
+ConditionPathExists=/boot/machine/machine.cfg
 
 [Service]
 Type=oneshot

@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Configure networking and time sync from /boot/machine.cfg (a plain KEY=value
-# file on the writable BOOT partition, edited per machine before first boot).
+# Configure networking and time sync from /boot/machine/machine.cfg (a plain
+# KEY=value file on the writable BOOT partition, edited per machine before
+# first boot).
 # The rootfs is read-only and identical on every machine, so the generated
 # network configuration goes to /run, which systemd-networkd and
 # systemd-timesyncd read like any other configuration directory.
@@ -38,12 +39,12 @@
 # NTP= link lines), but only the highest-priority daemon is left enabled so
 # that two of them never adjust the clock at once.
 #
-# With no /boot/machine.cfg the service exits and the built-in networkd
+# With no /boot/machine/machine.cfg the service exits and the built-in networkd
 # configuration applies unchanged.
 
 set -e
 
-CFG=/boot/machine.cfg
+CFG=/boot/machine/machine.cfg
 NETWORK_DIR=/run/systemd/network
 TIMESYNC_CONF=/run/systemd/timesyncd.conf.d/bootcfg.conf
 NETWORK_FILE=$NETWORK_DIR/80-bootcfg.network

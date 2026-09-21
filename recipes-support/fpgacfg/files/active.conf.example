@@ -1,8 +1,12 @@
-# fpgacfg: select the bitstream to load at boot. Deployed to
-# /boot/fpga/active.conf by inflate-sd.sh; edit per machine. The value is
-# either an exact file name inside /boot/fpga or a glob pattern (* and ?)
-# matched against the pool; a pattern matching several files loads the
-# newest one by modification time. Matching is case-insensitive (*.bin and
-# *.BIN are equivalent).
+## fpgacfg: select the bitstream to load at boot. Deployed to
+## /boot/fpga/active.conf by inflate-sd.sh; edit per machine. The value is
+## either an exact file name inside /boot/fpga or a glob pattern (* and ?)
+## matched against the pool; a pattern matching several files loads the
+## newest one by modification time. Matching is case-insensitive (*.bin and
+## *.BIN are equivalent).
+##
+## Lines starting with '#' are disabled options; remove the leading '#' to
+## enable one.
 
 BITSTREAM=*.bin
+# BITSTREAM=blm_prod.bit.bin
