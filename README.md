@@ -15,8 +15,9 @@ PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
   saves at start, at shutdown and on a 5-minute timer; saves only ever move
   the timestamp forward so a stale kernel-default clock cannot regress it.
 * `fpgacfg` -- load the bitstream selected by `/boot/fpga/active.conf` (a pool of
-  `*.bin` files; the selection is an exact name or a glob pattern, several
-  matches load the newest file by mtime; `fpgacfg.sh <name>` switches at runtime)
+  `*.bin` files; the selection is an exact name or a glob pattern, matched
+  case-insensitively, several matches load the newest file by mtime;
+  `fpgacfg.sh <name>` switches at runtime)
 
 Board-specific recipes live in each project's `meta-user`; EPICS recipes live
 in `meta-impcas-epics`.

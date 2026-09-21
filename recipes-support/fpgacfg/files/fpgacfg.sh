@@ -14,8 +14,10 @@
 # A value containing * or ? is a glob matched against the pool files; if it
 # matches several, the newest one by modification time wins (the usual
 # default BITSTREAM=*.bin means "load the bitstream swept last"). A value
-# without wildcards must name a pool file exactly. Only *.bin files can ever
-# match, so the pattern cannot pick up active.conf itself.
+# without wildcards must name a pool file exactly. Matching is
+# case-insensitive -- the BOOT partition is FAT32, where file names are
+# case-insensitive too -- and only *.bin files (any case) can ever match, so
+# the pattern cannot pick up active.conf itself.
 #
 # Without arguments (the systemd service) the selected bitstream is loaded
 # through Xilinx fpgautil. With a file-name argument the given pool file is
@@ -36,9 +38,22 @@ FPGA_DIR=/boot/fpga
 ACTIVE="$FPGA_DIR/active.conf"
 
 pool_files() {
-    for f in "$FPGA_DIR"/*.bin; do
-        [ -f "$f" ] && echo "$f"
+    for f in "$FPGA_DIR"/*; do
+        case $f in
+            *.[bB][iI][nN]) [ -f "$f" ] && echo "$f" ;;
+        esac
     done
+}
+
+# Case-insensitive glob match: uppercase both sides and compare with an
+# anchored ERE derived from the glob. The BITSTREAM charset restricts the
+# glob syntax to * ? and literal '.', of which only '.' is a regex
+# metacharacter, so the translation stays trivial.
+ci_glob() {
+    pat=$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]' |
+          sed -e 's/\./\\./g' -e 's/\*/.*/g' -e 's/\?/./g')
+    name=$(printf '%s' "$2" | tr '[:lower:]' '[:upper:]')
+    printf '%s\n' "$name" | grep -Eq "^${pat}\$"
 }
 
 load() {
@@ -95,15 +110,16 @@ if [ -z "$BITSTREAM" ]; then
     exit 1
 fi
 
-# Resolve BITSTREAM against the pool. Wildcards make it a glob over the
-# pool, narrowed to *.bin so active.conf itself can never match; several
-# matches load the newest file by mtime. Without wildcards the value must
-# name a pool file exactly. An unmatched glob stays a literal name here, so
-# the -f check treats it like any other missing file.
+# Resolve BITSTREAM against the pool: an exact pool file name or a glob
+# pattern over it, matched case-insensitively, and only ever against *.bin
+# files (any case), so active.conf itself can never match. Several matches
+# load the newest file by mtime.
 matches=
-for m in "$FPGA_DIR"/$BITSTREAM; do
-    case $m in
-        *.bin) [ -f "$m" ] && matches="$matches $m" ;;
+for f in "$FPGA_DIR"/*; do
+    case $f in
+        *.[bB][iI][nN])
+            [ -f "$f" ] && ci_glob "$BITSTREAM" "${f##*/}" && matches="$matches $f"
+            ;;
     esac
 done
 

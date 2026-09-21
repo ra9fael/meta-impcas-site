@@ -2,6 +2,7 @@
 # /boot/fpga/active.conf by inflate-sd.sh; edit per machine. The value is
 # either an exact file name inside /boot/fpga or a glob pattern (* and ?)
 # matched against the pool; a pattern matching several files loads the
-# newest one by modification time.
+# newest one by modification time. Matching is case-insensitive (*.bin and
+# *.BIN are equivalent).
 
 BITSTREAM=*.bin

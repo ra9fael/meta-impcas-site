@@ -3,9 +3,10 @@ DESCRIPTION = "Configures the PL through Xilinx fpgautil with the bitstream \
 selected by /boot/fpga/active.conf out of a pool of bitstream files on the \
 writable BOOT partition, so a bitstream can be swapped per machine without \
 rebuilding the rootfs. The selection is an exact pool file name or a glob \
-pattern (* / ?); a pattern matching several files loads the newest one by \
-modification time. The script also accepts a file-name argument to load a \
-pool file at runtime. A deployment that loads the PL from BOOT.BIN (FSBL) \
+pattern (* / ?), matched case-insensitively like the FAT32 BOOT partition; \
+a pattern matching several files loads the newest one by modification \
+time. The script also accepts a file-name argument to load a pool file at \
+runtime. A deployment that loads the PL from BOOT.BIN (FSBL) \
 is unaffected: the service no-ops when /boot/fpga is absent or empty, and \
 refuses to guess when bitstreams are present but ambiguous."
 HOMEPAGE = "https://github.com/ra9fael/meta-impcas-site"
