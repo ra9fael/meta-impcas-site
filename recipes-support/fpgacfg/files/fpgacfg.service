@@ -9,6 +9,10 @@ ConditionPathExists=/boot/fpga
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+# Drop the PL-configured credential before working: a failed re-run must
+# not be covered by the previous run's success. fpgacfg.sh rewrites it on
+# every path that actually configures the PL.
+ExecStartPre=/bin/rm -f /run/fpgacfg.loaded
 ExecStart=@SBINDIR@/fpgacfg.sh
 
 [Install]

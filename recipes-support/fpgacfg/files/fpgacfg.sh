@@ -31,11 +31,28 @@
 # or a selection that does not exist -- is an error listing the candidates:
 # loading a wrong bitstream silently would be far worse than failing to
 # configure the PL at all.
+#
+# "exit 0" alone does not prove the PL is configured: the empty-pool no-op
+# exits 0 with the PL state unknown. Applications that map PL registers
+# (the BLM IOC) must not read that exit code as permission -- they gate on
+# the credential this script leaves at /run/fpgacfg.loaded, which is written
+# only when this script itself has programmed the PL. On a BOOT.BIN-loaded
+# board, declare the PL state explicitly by creating the marker
+# /boot/fpga/preconfigured (any content): with the pool empty and the marker
+# present, this script writes the credential on behalf of the FSBL. The
+# marker with a nonempty pool is ignored -- runtime loading wins and
+# rewrites the credential.
 
 set -e
 
 FPGA_DIR=/boot/fpga
 ACTIVE="$FPGA_DIR/active.conf"
+MARKER="$FPGA_DIR/preconfigured"
+TOKEN=/run/fpgacfg.loaded
+
+write_token() {
+    printf '%s\n' "$1" > "$TOKEN"
+}
 
 pool_files() {
     for f in "$FPGA_DIR"/*; do
@@ -59,6 +76,7 @@ ci_glob() {
 load() {
     echo "fpgacfg: loading $1"
     fpgautil -b "$1"
+    write_token "loaded $1"
 }
 
 if [ -n "$1" ]; then
@@ -80,7 +98,12 @@ fi
 
 # Boot mode.
 if [ ! -d "$FPGA_DIR" ] || [ -z "$(pool_files)" ]; then
-    echo "fpgacfg: no bitstream pool under $FPGA_DIR, nothing to load"
+    if [ -e "$MARKER" ]; then
+        echo "fpgacfg: pool empty, $MARKER present -- PL configured by BOOT.BIN"
+        write_token "preconfigured by BOOT.BIN"
+    else
+        echo "fpgacfg: no bitstream pool under $FPGA_DIR, nothing to load"
+    fi
     exit 0
 fi
 

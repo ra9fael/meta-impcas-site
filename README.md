@@ -18,7 +18,10 @@ PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
 * `fpgacfg` -- load the bitstream selected by `/boot/fpga/active.conf` (a pool of
   `*.bin` files; the selection is an exact name or a glob pattern, matched
   case-insensitively, several matches load the newest file by mtime;
-  `fpgacfg.sh <name>` switches at runtime)
+  `fpgacfg.sh <name>` switches at runtime). Every load that configures the PL
+  leaves the credential `/run/fpgacfg.loaded` for PL-mapping services to gate
+  on (the empty-pool no-op exits 0 without writing it; a BOOT.BIN-configured
+  board declares itself with the marker `/boot/fpga/preconfigured`)
 
 Board-specific recipes live in each project's `meta-user`; EPICS recipes live
 in `meta-impcas-epics`.
