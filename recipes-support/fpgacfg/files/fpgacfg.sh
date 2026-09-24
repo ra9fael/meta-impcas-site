@@ -116,15 +116,26 @@ fi
 
 # The file is sourced, so only the one known KEY with a safe value charset
 # is accepted (* and ? make the value a glob; - is last in the class so it
-# stays literal).
-if grep -Evq '^[[:space:]]*(#|$)|^BITSTREAM="?[A-Za-z0-9._*?-]+"?[[:space:]]*$' "$ACTIVE"; then
+# stays literal). BOOT is FAT and this file is written from whatever machine
+# has the card plugged in, so read a CR-free copy: a Notepad CR passes the
+# charset check as trailing whitespace and then lands inside BITSTREAM, where
+# it matches no pool file and reports only "no pool file matches".
+SRC=$ACTIVE
+if grep -q "$(printf '\r')" "$ACTIVE"; then
+    echo "fpgacfg: $ACTIVE has CRLF line endings (edited on Windows?), stripping CR" >&2
+    SRC=/tmp/fpgacfg.$$.conf
+    tr -d '\r' < "$ACTIVE" > "$SRC"
+    trap 'rm -f "$SRC"' 0
+fi
+
+if grep -Evq '^[[:space:]]*(#|$)|^BITSTREAM="?[A-Za-z0-9._*?-]+"?[[:space:]]*$' "$SRC"; then
     echo "fpgacfg: $ACTIVE contains unsupported lines, ignoring it" >&2
     exit 1
 fi
 
 # The config file is the only source of BITSTREAM.
 unset BITSTREAM
-. "$ACTIVE"
+. "$SRC"
 
 if [ -z "$BITSTREAM" ]; then
     echo "fpgacfg: bitstreams present but $ACTIVE selects none" >&2

@@ -55,9 +55,21 @@ TIME_UNITS="chronyd.service ntpd.service systemd-timesyncd.service"
 
 [ -r "$CFG" ] || { echo "bootcfg: no $CFG, keeping built-in network config"; exit 0; }
 
+# BOOT is FAT and this file is written by whoever has the card in a Windows
+# machine, where Notepad ends every line with CR; sourcing that would fold a
+# CR into HOSTNAME, NTP and the rest. Validate and read a CR-free copy, but
+# keep naming $CFG in the messages so the operator sees the file to fix.
+SRC=$CFG
+if grep -q "$(printf '\r')" "$CFG"; then
+    echo "bootcfg: $CFG has CRLF line endings (edited on Windows?), stripping CR" >&2
+    SRC=/tmp/bootcfg.$$.conf
+    tr -d '\r' < "$CFG" > "$SRC"
+    trap 'rm -f "$SRC"' 0
+fi
+
 # Only plain KEY=value lines with a safe value charset are accepted; the file
 # is sourced, so anything that could execute must be rejected up front.
-if grep -Evq '^[[:space:]]*(#|$)|^[A-Za-z_][A-Za-z0-9_]*="?[A-Za-z0-9_.:/ -]*"?[[:space:]]*$' "$CFG"; then
+if grep -Evq '^[[:space:]]*(#|$)|^[A-Za-z_][A-Za-z0-9_]*="?[A-Za-z0-9_.:/ -]*"?[[:space:]]*$' "$SRC"; then
     echo "bootcfg: $CFG contains unsupported lines, ignoring it" >&2
     exit 1
 fi
@@ -67,7 +79,7 @@ fi
 # would otherwise end up in the generated configuration).
 unset INTERFACE MACADDRESS DHCP IPADDRESS NETMASK PREFIXLEN GATEWAY DNS NTP HOSTNAME
 
-. "$CFG"
+. "$SRC"
 
 INTERFACE=${INTERFACE:-eth0}
 
