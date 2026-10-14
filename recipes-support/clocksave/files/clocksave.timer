@@ -1,5 +1,5 @@
 [Unit]
-Description=Save the current clock to /boot periodically
+Description=Save the current clock to /var/lib/clocksave periodically
 
 [Timer]
 OnBootSec=2min

@@ -1,6 +1,7 @@
 SUMMARY = "Machine identity, network and NTP configuration from /boot/machine/machine.cfg"
-DESCRIPTION = "Translates a per-machine KEY=value file on the writable BOOT \
-partition into runtime systemd-networkd and systemd-timesyncd configuration \
+DESCRIPTION = "Translates a per-machine KEY=value file on the BOOT \
+partition (read-only at runtime; a deployer edits it with the card in a PC) \
+into runtime systemd-networkd and systemd-timesyncd configuration \
 under /run, so a read-only rootfs image stays identical across machines. \
 Addressing is static by default (IPADDRESS takes one or more addresses, each \
 optionally suffixed /prefix); DHCP=ipv4 only when DHCP=yes, which ignores \

@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: MIT
 
 # Configure networking and time sync from /boot/machine/machine.cfg (a plain
-# KEY=value file on the writable BOOT partition, edited per machine before
-# first boot).
+# KEY=value file on the BOOT partition, read-only at runtime, edited per
+# machine offline before first boot).
 # The rootfs is read-only and identical on every machine, so the generated
 # network configuration goes to /run, which systemd-networkd and
 # systemd-timesyncd read like any other configuration directory.

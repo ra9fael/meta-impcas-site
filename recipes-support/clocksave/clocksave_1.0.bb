@@ -1,7 +1,7 @@
 SUMMARY = "Persist the system clock across reboots without an RTC"
-DESCRIPTION = "Restores the last known time from /boot/machine/clock.save early at \
-boot and saves the current time at start, at shutdown and on a timer, so \
-boards without an RTC do not boot into the distant past while NTP is not \
+DESCRIPTION = "Restores the last known time from /var/lib/clocksave/clock.save \
+early at boot and saves the current time at start, at shutdown and on a timer, \
+so boards without an RTC do not boot into the distant past while NTP is not \
 yet reachable. Saves only ever move the timestamp forward, so a stale \
 kernel-default clock can never overwrite a good value."
 HOMEPAGE = "https://github.com/ra9fael/meta-impcas-util"

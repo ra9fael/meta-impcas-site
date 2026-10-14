@@ -1,6 +1,7 @@
 [Unit]
 Description=Apply network and NTP configuration from /boot/machine/machine.cfg
-# Site-specific network configuration lives on the writable BOOT partition;
+# Site-specific network configuration lives on the BOOT partition, which
+# bootmount keeps read-only at runtime;
 # this service translates it into runtime configuration before the network
 # and time daemons start. Ordering against daemons the image does not ship
 # (ntpd, chronyd) is a no-op: systemd only builds ordering edges for units

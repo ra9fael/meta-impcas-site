@@ -3,7 +3,10 @@
 Site-configuration systemd services and tools shared across IMPCAS
 PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
 
-* `bootmount` -- mount the BOOT partition (label `BOOT`) at `/boot`
+* `bootmount` -- mount the BOOT partition (label `BOOT`) read-only at `/boot`:
+  the card is configuration the boot chain reads and a deployer edits offline
+  from a PC, and nothing on the running target writes the FAT (an on-target
+  edit is a deliberate `remount,rw` window that must return to `ro`)
 * `bootcfg` -- machine identity, network and NTP configuration from
   `/boot/machine/machine.cfg`:
   static addressing by default (one or more addresses, per-address `/prefix` override),
@@ -12,7 +15,8 @@ PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
   systemd-timesyncd) and the others are configured too but disabled, so
   exactly one daemon adjusts the clock.
 * `clocksave` -- persist the clock across reboots on boards without an RTC:
-  restores the last saved time from `/boot/machine/clock.save` in the sysinit phase,
+  restores the last saved time from `/var/lib/clocksave/clock.save` in the
+  sysinit phase,
   saves at start, at shutdown and on a 5-minute timer; saves only ever move
   the timestamp forward so a stale kernel-default clock cannot regress it.
 * `fpgacfg` -- load the bitstream selected by `/boot/fpga/active.conf` (a pool of

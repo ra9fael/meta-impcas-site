@@ -1,15 +1,15 @@
 [Unit]
-Description=Restore last known clock from /boot/machine/clock.save
+Description=Restore last known clock from /var/lib/clocksave/clock.save
 # Boards without an RTC boot into the kernel's default time; the restored
 # value is at most one save interval stale and is superseded by NTP as soon
 # as it syncs. Running in the sysinit phase puts the restore before nearly
-# everything else on the boot path; bootmount provides /boot in the local-fs
-# phase, which completes before sysinit.
+# everything else on the boot path. The file lives on the rootfs, so the only
+# ordering this needs is PID1 having remounted it read-write.
 DefaultDependencies=no
-After=bootmount.service
+After=systemd-remount-fs.service
 Before=sysinit.target shutdown.target
 Conflicts=shutdown.target
-ConditionPathExists=/boot/machine/clock.save
+ConditionPathExists=/var/lib/clocksave/clock.save
 
 [Service]
 Type=oneshot

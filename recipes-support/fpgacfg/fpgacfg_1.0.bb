@@ -1,7 +1,7 @@
 SUMMARY = "Load the selected FPGA bitstream from /boot/fpga at boot"
 DESCRIPTION = "Configures the PL through Xilinx fpgautil with the bitstream \
 selected by /boot/fpga/active.conf out of a pool of bitstream files on the \
-writable BOOT partition, so a bitstream can be swapped per machine without \
+BOOT partition, so a bitstream can be swapped per machine without \
 rebuilding the rootfs. The selection is an exact pool file name or a glob \
 pattern (* / ?), matched case-insensitively like the FAT32 BOOT partition; \
 a pattern matching several files loads the newest one by modification \
