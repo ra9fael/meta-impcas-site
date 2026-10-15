@@ -166,8 +166,12 @@ advice() {
     echo "         systemctl stop epics-ioc@<instance>" >&2
     echo "                  every IOC whose machine layer is read off the card" >&2
     echo "         umount $MOUNT" >&2
-    echo "         fsck.vfat -l -r $LABEL_DEV" >&2
-    echo "                  -l says what it would do, -r asks before each change" >&2
+    echo "         fsck.vfat -n $LABEL_DEV" >&2
+    echo "                  look once more; still the check that cannot write" >&2
+    echo "         fsck.vfat -r $LABEL_DEV" >&2
+    echo "                  repair interactively, one change at a time. -a does" >&2
+    echo "                  the same without asking, which is not a decision" >&2
+    echo "                  this script makes" >&2
     echo "         systemctl restart bootmount.service" >&2
     echo "                  put it back read-only" >&2
     echo "         systemctl start epics-ioc@<instance>" >&2
