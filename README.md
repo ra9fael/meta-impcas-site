@@ -11,9 +11,13 @@ PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
   does not (`BOOT_RW_WINDOW=<seconds>` sizes the lease, `BOOT_RW_FORCE=1` opens
   a volume `boot-rw` would rather not). `boot-check` answers the same question
   on its own: it reads the volume with `fsck.vfat -n`, which cannot write, and
-  prints how to repair the partition without repairing it. Whether the last
-  window was closed is recorded on the rootfs and warned about at boot if it
-  was not
+  prints how to repair the partition without repairing it. The check means
+  something only while `/boot` is read-only: the kernel sets the FAT dirty bit
+  itself for the whole life of a read-write mount, so inside a window both
+  commands report that marker as the kernel's own bookkeeping rather than as
+  damage (`boot-check` exits 4 for "cannot be judged"), and a second `boot-rw`
+  extends the lease without re-checking. Whether the last window was closed is
+  recorded on the rootfs and warned about at boot if it was not
 * `bootcfg` -- machine identity, network and NTP configuration from
   `/boot/machine/machine.cfg`:
   static addressing by default (one or more addresses, per-address `/prefix` override),

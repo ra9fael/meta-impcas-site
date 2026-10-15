@@ -6,6 +6,10 @@
 # Ask the BOOT partition how it is doing. The check cannot write: fsck.vfat -n
 # opens the volume read-only and only reports, so this is safe to run any time,
 # mounted or not, window open or not. It exits 0 on a volume that needs no
-# repair, 1 on one that does, and 3 when the FAT could not be read at all.
+# repair, 1 on one that does, 3 when the FAT could not be read at all, and 4
+# when the volume has something to say that this machine put there: while a
+# boot-rw window is open the kernel holds the FAT dirty bit set as its own
+# record of an unclean unmount, so the card itself cannot be judged until the
+# window is closed.
 
 exec @SBINDIR@/bootmount.sh check

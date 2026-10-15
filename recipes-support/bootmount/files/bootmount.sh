@@ -39,6 +39,11 @@
 #   check    boot-check: report what the FAT looks like and how to repair it,
 #            and never repair it
 #
+# A check means something only while /boot is read-only. The kernel marks a FAT
+# volume dirty for the whole life of a read-write mount -- that is the closest
+# thing the filesystem has to a journal -- so inside a window every check reads
+# its own marker, and both open and check say so instead of calling it damage.
+#
 # The guards on the window are the kernel's own rather than ours.
 # `remount,rw` fails outright once the FAT has been taken read-only after an
 # error, so the window cannot be opened on a volume that has already failed
@@ -153,6 +158,13 @@ volume() {
 damaging_re='Dirty bit is set|not properly unmounted|FATs differ|out of range|Reclaimed|Bad sector|bad cluster|cross-linked|Duplicate|cluster chain|truncat|salvage|Deleted file|dead cluster'
 cosmetic_re='^fsck\.fat |^Leaving filesystem |^Checking |mostly harmless|between boot sector and its backup|Not automatically fixing|Auto-correcting|Automatically removing dirty bit|Free cluster summary|FSINFO|uninitialized|^ *Offset [0-9]|^ *[0-9a-fx/]+:[0-9a-fx/]+|^ *Using (first|second) FAT|files, [0-9]+/[0-9]+ clusters|^ *$'
 
+# The dirty bit alone is what a writable volume always reports: FAT has no
+# journal, so the kernel marks the volume dirty for the whole life of a
+# read-write mount and clears it again on remount,ro or umount. That is its only
+# record of "this volume was open when the machine stopped", and while boot-rw
+# has the window open it is a fact about our own mount, not about the card.
+kernel_dirty_re='dirty bit|not properly unmounted'
+
 # The repair sequence, printed and never run. Repairing here would mean
 # unmounting the partition this machine's configuration is read from, stopping
 # the IOCs that started from it, and deciding all that inside a command whose
@@ -181,9 +193,10 @@ advice() {
     echo "         of machine data." >&2
 }
 
-# Reads the volume and reports it. Sets FAT to clean, cosmetic, damaged or
-# unreadable; damaged and unreadable are written to stderr, because they are
-# the two answers that stop something.
+# Reads the volume and reports it. Sets FAT to clean, cosmetic, window,
+# damaged or unreadable; damaged and unreadable are written to stderr, because
+# they are the two answers that stop something, and window because it is the
+# answer that stops a refusal.
 read_fat() {
     who=$1
     FAT=unreadable
@@ -206,6 +219,15 @@ read_fat() {
     fi
 
     if printf '%s\n' "$out" | grep -qE "$damaging_re"; then
+        if [ -z "$(printf '%s\n' "$out" | grep -E "$damaging_re" | grep -viE "$kernel_dirty_re" || true)" ] && is_rw; then
+            FAT=window
+            echo "$who: $MOUNT is writable, so the only thing the FAT reports is" >&2
+            echo "         the dirty bit the kernel itself sets for a read-write" >&2
+            echo "         mount. That is not damage, and boot-ro clears it." >&2
+            echo "         Nothing on the card can be judged until then: run $who" >&2
+            echo "         again once $MOUNT is read-only." >&2
+            return 0
+        fi
         FAT=damaged
         echo "$who: $dev is damaged:" >&2
         printf '%s\n' "$out" | grep -vE "$cosmetic_re" | sed 's/^/         /' >&2
@@ -271,8 +293,16 @@ open_window() {
 
     # Before the window, not after: while the volume is read-only nothing of
     # ours is sitting in the page cache, so this is the one moment the check
-    # sees the card as the boot chain will see it.
-    read_fat boot-rw
+    # sees the card as the boot chain will see it. A window that is already
+    # open is not that moment, and is not examined: extending a lease is a
+    # second boot-rw, and the check would find nothing to report but the dirty
+    # bit this command's own remount,rw set -- refusing the very path the lease
+    # extension is.
+    if is_rw; then
+        FAT=window
+    else
+        read_fat boot-rw
+    fi
     case "$FAT" in
         damaged)
             if [ -z "${BOOT_RW_FORCE:-}" ]; then
@@ -412,6 +442,10 @@ check_command() {
             exit 0 ;;
         damaged)
             exit 1 ;;
+        window)
+            # Neither sound nor broken: unanswerable, because the volume is
+            # open for writing and the kernel is holding its own marker set.
+            exit 4 ;;
         *)
             exit 3 ;;
     esac
