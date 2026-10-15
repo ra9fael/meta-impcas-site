@@ -1,0 +1,14 @@
+[Unit]
+Description=Poll for an expired /boot write window
+# Static timer, deliberately not enabled: a write window never survives a
+# reboot, so it must not resurrect itself at boot. boot-rw starts it (and
+# restarts it to extend a lease) and both boot-ro and the auto-close path stop
+# it, so the interval below is only ever counted while /boot is writable.
+
+[Timer]
+# 60s from the moment boot-rw armed the window, then 60s after each poll: the
+# lease boot-rw recorded is honoured within a minute, and a close the kernel
+# refused because the volume was busy is retried on the same cadence.
+OnActiveSec=60s
+OnUnitActiveSec=60s
+AccuracySec=5s

@@ -1,0 +1,10 @@
+[Unit]
+Description=Close the /boot write window when its lease expires
+# Static unit, deliberately not enabled: boot-rw starts boot-ro.timer when it
+# opens a window and boot-ro stops it again, so this only ever runs while a
+# write window is open. It never closes a window the kernel is refusing (a
+# writer still holds the volume busy) -- it just keeps trying.
+
+[Service]
+Type=oneshot
+ExecStart=@SBINDIR@/bootmount.sh auto

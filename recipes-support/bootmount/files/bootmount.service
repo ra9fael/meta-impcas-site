@@ -9,7 +9,7 @@ Before=local-fs.target bootcfg.service fpgacfg.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=@SBINDIR@/bootmount.sh
+ExecStart=@SBINDIR@/bootmount.sh mount
 
 [Install]
 WantedBy=local-fs.target

@@ -1,0 +1,11 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 IMPCAS
+#
+# SPDX-License-Identifier: MIT
+
+# Ask the BOOT partition how it is doing. The check cannot write: fsck.vfat -n
+# opens the volume read-only and only reports, so this is safe to run any time,
+# mounted or not, window open or not. It exits 0 on a volume that needs no
+# repair, 1 on one that does, and 3 when the FAT could not be read at all.
+
+exec @SBINDIR@/bootmount.sh check

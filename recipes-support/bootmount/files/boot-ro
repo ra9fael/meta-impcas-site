@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 IMPCAS
+#
+# SPDX-License-Identifier: MIT
+
+# Close the BOOT write window now instead of waiting for its lease to run out.
+
+exec @SBINDIR@/bootmount.sh close

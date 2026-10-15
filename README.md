@@ -5,8 +5,15 @@ PetaLinux projects (Yocto scarthgap / PetaLinux 2024.2):
 
 * `bootmount` -- mount the BOOT partition (label `BOOT`) read-only at `/boot`:
   the card is configuration the boot chain reads and a deployer edits offline
-  from a PC, and nothing on the running target writes the FAT (an on-target
-  edit is a deliberate `remount,rw` window that must return to `ro`)
+  from a PC, and nothing on the running target writes the FAT. An on-target
+  edit goes through `boot-rw` / `boot-ro`, which check the FAT, open a timed
+  write window and leave `boot-ro.timer` to close it by itself if the operator
+  does not (`BOOT_RW_WINDOW=<seconds>` sizes the lease, `BOOT_RW_FORCE=1` opens
+  a volume `boot-rw` would rather not). `boot-check` answers the same question
+  on its own: it reads the volume with `fsck.vfat -n`, which cannot write, and
+  prints how to repair the partition without repairing it. Whether the last
+  window was closed is recorded on the rootfs and warned about at boot if it
+  was not
 * `bootcfg` -- machine identity, network and NTP configuration from
   `/boot/machine/machine.cfg`:
   static addressing by default (one or more addresses, per-address `/prefix` override),

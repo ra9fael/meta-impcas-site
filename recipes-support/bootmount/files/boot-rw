@@ -1,0 +1,11 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 IMPCAS
+#
+# SPDX-License-Identifier: MIT
+
+# Open a write window on the BOOT partition, with the close taken care of by
+# boot-ro.timer. All the work is in bootmount.sh: it checks the FAT before
+# opening, BOOT_RW_WINDOW=<seconds> sizes the window, and BOOT_RW_FORCE=1
+# opens a volume the check does not like.
+
+exec @SBINDIR@/bootmount.sh open
